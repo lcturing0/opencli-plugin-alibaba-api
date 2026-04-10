@@ -6,7 +6,7 @@ An [OpenCLI](https://github.com/jackwener/opencli) plugin — Manage Alibaba.com
 
 ```bash
 # Via opencli plugin manager (recommended)
-opencli plugin install github:YOUR_USERNAME/opencli-plugin-alibaba-api
+opencli plugin install github:lcturing0/opencli-plugin-alibaba-api
 
 # List installed plugins
 opencli plugin list
