@@ -13,7 +13,11 @@
  */
 
 import { cli, Strategy } from '@jackwener/opencli/registry';
-import { alibabaCall, alibabaPost } from './shared.js';
+import { alibabaCall } from './shared.js';
+
+// POST 辅助：业务参数放 URL（参与签名），method 改为 POST，无 body
+const alibabaPost = (apiPath, params, requireToken = true) =>
+    alibabaCall(apiPath, params, requireToken, { method: 'POST' });
 
 // ─── buyer-search：关键词搜索商品（包装键: param0）────────────────────────────
 cli({
@@ -482,6 +486,13 @@ cli({
         const inner = { item_id: Number(kwargs.item_id), size, index };
 
         const data = await alibabaCall('/eco/buyer/item/rec/image', { recReq: JSON.stringify(inner) });
+
+        // result_code 200001 = No Permission to Operate
+        const resultCode = data.result?.result_code;
+        if (resultCode && resultCode !== '200') {
+            throw new Error(`API error [${resultCode}]: ${data.result?.result_msg ?? 'No permission'}\nApply for image search permission at: https://openapi.alibaba.com`);
+        }
+
         const products = data.result?.result_data?.products ?? data.result_data?.products ?? [];
 
         if (!Array.isArray(products) || products.length === 0) {
@@ -528,6 +539,13 @@ cli({
         const inner = { item_id: Number(kwargs.item_id), type: Number(kwargs.type) || 2, size, index };
 
         const data = await alibabaCall('/eco/buyer/item/rec', { recReq: JSON.stringify(inner) });
+
+        // result_code 200001 = No Permission to Operate
+        const resultCode = data.result?.result_code;
+        if (resultCode && resultCode !== '200') {
+            throw new Error(`API error [${resultCode}]: ${data.result?.result_msg ?? 'No permission'}\nApply for recommendation permission at: https://openapi.alibaba.com`);
+        }
+
         const products = data.result?.result_data?.products ?? data.result_data?.products ?? [];
 
         if (!Array.isArray(products) || products.length === 0) {
@@ -586,7 +604,8 @@ cli({
         if (kwargs.channel) event.channel = String(kwargs.channel).toUpperCase();
         if (kwargs.store_id) event.channel_store_id = String(kwargs.store_id);
 
-        const data = await alibabaPost('/eco/buyer/product/events', { query_req: { events: [event] } });
+        // 实测：业务参数序列化为 JSON 字符串放 URL，method=POST，无 body
+        const data = await alibabaPost('/eco/buyer/product/events', { query_req: JSON.stringify({ events: [event] }) });
         const result = data.result ?? data;
 
         return [
@@ -657,7 +676,8 @@ cli({
         if (kwargs.store_id) req.ecology_store_id = String(kwargs.store_id);
         if (kwargs.instance_id) req.ecology_instance_id = String(kwargs.instance_id);
 
-        const data = await alibabaPost('/eco/buyer/product/channel/batch-import', { query_req: req });
+        // 实测：业务参数序列化为 JSON 字符串放 URL，method=POST，无 body
+        const data = await alibabaPost('/eco/buyer/product/channel/batch-import', { query_req: JSON.stringify(req) });
         const result = data.result ?? data;
 
         return [

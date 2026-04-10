@@ -66,7 +66,7 @@ export function generateSign(apiPath, appSecret, params) {
  * @param {Record<string, string>} params - 业务参数（不含系统参数）
  * @param {boolean} requireToken - 是否需要 access_token（默认 true）
  */
-export async function alibabaCall(apiPath, params, requireToken = true) {
+export async function alibabaCall(apiPath, params, requireToken = true, options = {}) {
     const { appKey, appSecret, accessToken } = getCredentials();
 
     if (requireToken && !accessToken) {
@@ -96,7 +96,7 @@ export async function alibabaCall(apiPath, params, requireToken = true) {
     const url = `${ALIBABA_GATEWAY}${apiPath}?${new URLSearchParams(allParams).toString()}`;
 
     const response = await fetch(url, {
-        method: 'GET',
+        method: options?.method ?? 'GET',
         headers: { 'Accept': 'application/json' },
     });
 
@@ -122,77 +122,6 @@ export async function alibabaCall(apiPath, params, requireToken = true) {
     }
 
     // 错误格式2：{ type: 'ISV'|'ISP', code, message }（Open API 风格）
-    if (data.type === 'ISV' || data.type === 'ISP') {
-        const hint = data.type === 'ISP'
-            ? 'This API requires additional permission. Apply at: https://openapi.alibaba.com'
-            : 'Check your request parameters.';
-        throw new CommandExecutionError(
-            `Alibaba API error [${data.code ?? data.type}]: ${data.message ?? 'Unknown error'}`,
-            hint,
-        );
-    }
-
-    return data;
-}
-
-/**
- * 调用 Alibaba Open API — POST with JSON body
- *
- * 系统参数（app_key / timestamp / sign / access_token）放 URL query，
- * 业务参数以 JSON 放 body（适合含数组/嵌套对象的 /eco/buyer/ POST 接口）。
- *
- * @param {string} apiPath - API 路径，如 "/eco/buyer/product/events"
- * @param {object} body    - 业务参数对象（原样 JSON 序列化）
- * @param {boolean} requireToken - 是否需要 access_token（默认 true）
- */
-export async function alibabaPost(apiPath, body, requireToken = true) {
-    const { appKey, appSecret, accessToken } = getCredentials();
-
-    if (requireToken && !accessToken) {
-        throw new CommandExecutionError(
-            'Alibaba access token not configured',
-            'Set environment variable: ALI_ACCESS_TOKEN=<your_access_token>\n' +
-            'OAuth guide: https://openapi.alibaba.com/doc/doc.htm',
-        );
-    }
-
-    const timestamp = String(Date.now());
-    // 只对系统参数签名（body 为复杂对象，不参与签名）
-    const sysParams = {
-        app_key: appKey,
-        timestamp,
-        sign_method: 'sha256',
-    };
-    if (requireToken && accessToken) {
-        sysParams.access_token = accessToken;
-    }
-    sysParams.sign = generateSign(apiPath, appSecret, sysParams);
-
-    const url = `${ALIBABA_GATEWAY}${apiPath}?${new URLSearchParams(sysParams).toString()}`;
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-        throw new CommandExecutionError(
-            `Alibaba Open API gateway returned HTTP ${response.status}`,
-            'Check your ALI_APP_KEY / ALI_APP_SECRET, then retry.',
-        );
-    }
-
-    const data = await response.json();
-
-    const errResp = data.error_response;
-    if (errResp) {
-        throw new CommandExecutionError(
-            `Alibaba API error [${errResp.code ?? ''}]: ${errResp.msg ?? 'Unknown error'}`,
-            String(errResp.sub_msg ?? 'Check your parameters and permissions.'),
-        );
-    }
-
     if (data.type === 'ISV' || data.type === 'ISP') {
         const hint = data.type === 'ISP'
             ? 'This API requires additional permission. Apply at: https://openapi.alibaba.com'
