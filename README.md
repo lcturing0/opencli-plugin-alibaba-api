@@ -151,20 +151,50 @@ opencli alibaba-api product-list -f csv > products.csv
 
 ## Commands Reference
 
+### Auth
+
 | Command | Description |
 |---------|-------------|
 | `auth-url <redirect_uri>` | Generate OAuth authorization URL |
 | `token-create <code>` | Exchange auth code for access token |
 | `token-refresh <refresh_token>` | Refresh an expired access token |
+
+### Seller — ICBU Product (V2)
+
+| Command | Description |
+|---------|-------------|
 | `category-get` | Get ICBU category tree |
-| `product-get <product_id>` | Get product details |
-| `product-list` | List products with optional filters |
+| `product-get <product_id>` | Get product details (seller view) |
+| `product-list` | List own products with optional filters |
 | `product-search <keyword>` | Search by model number or SKU code |
 | `product-status <product_id>` | Get product publish status |
+
+### Seller — Order
+
+| Command | Description |
+|---------|-------------|
 | `order-list` | List orders with optional filters |
 | `order-get <trade_id>` | Get order details |
 | `order-tracking <trade_id>` | Get logistics tracking *(extra permission needed)* |
 | `order-cancel <trade_id>` | Cancel an order |
+
+### Buyer — Product (cid=7)
+
+| Command | Description |
+|---------|-------------|
+| `buyer-search <keyword>` | Search Alibaba.com products by keyword |
+| `buyer-desc <product_id>` | Get full product detail: title, SKUs, price ladder, images |
+| `buyer-attrs <product_id>` | Get product key attributes by country |
+| `buyer-cert <product_id>` | Get product certificates |
+| `buyer-inventory <product_id>` | Get SKU-level inventory by shipping origin |
+| `buyer-list <product_type>` | Get product ID list by type (US_CGS_48H, alibaba_picks, etc.) |
+| `buyer-crossborder` | List cross-border inventory product IDs |
+| `buyer-local` | List overseas local inventory product IDs |
+| `buyer-local-regular` | List overseas local regular-fulfillment product IDs |
+| `buyer-image-search <item_id>` | Find visually similar products by product ID |
+| `buyer-rec <item_id>` | Product recommendations: similar / hot-selling / image (--type 1-3) |
+| `buyer-events <product_id>` | Notify channel product listed/delisted events *(POST)* |
+| `buyer-channel-import <ids>` | Batch import products to external channel store *(POST)* |
 
 ---
 
