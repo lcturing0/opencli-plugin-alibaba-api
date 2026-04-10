@@ -1,0 +1,6 @@
+{
+  "name": "alibaba-api",
+  "version": "0.1.0",
+  "description": "Alibaba.com Open Platform CLI: auth tokens, product management, order operations via OpenAPI",
+  "opencli": ">=1.6.9"
+}
